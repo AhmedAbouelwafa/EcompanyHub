@@ -31,6 +31,10 @@ namespace ECompanyHub.API.Controllers
         [Consumes("multipart/form-data")]
         public async Task<IActionResult> Register([FromForm] AccountRegisterDto accountRegister)
         {
+            // التحقق من وجود البيانات أولاً
+            if (accountRegister == null)
+                return BadRequest("No data provided");
+            
             if (string.IsNullOrWhiteSpace(accountRegister.email))
                 return BadRequest("Email is required");
 
