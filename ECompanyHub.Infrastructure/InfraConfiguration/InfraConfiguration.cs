@@ -1,4 +1,4 @@
-﻿
+
 using ECompanyHub.Application.InterfaceService;
 using ECompanyHub.Infrastructure.Context;
 using ECompanyHub.Infrastructure.Identity;
@@ -19,7 +19,7 @@ namespace ECompanyHub.Infrastructure.InfraConfiguration
         public static IServiceCollection InfrastructureDependencyConfiguration(this IServiceCollection services, IConfiguration configuration)
         {
             services.AddDbContext<AppDbContext>(options =>
-                options.UseSqlServer(configuration.GetConnectionString("DefaultConnection")));
+                options.UseSqlite(configuration.GetConnectionString("DefaultConnection")));
 
             services.AddAutoMapper(cfg =>
             {
