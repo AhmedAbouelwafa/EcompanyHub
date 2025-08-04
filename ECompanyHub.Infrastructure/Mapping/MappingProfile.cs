@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using ECompanyHub.Application.DTOs;
+using ECompanyHub.Application.DTOs.Account_DTOs;
 using ECompanyHub.Infrastructure.Identity;
 using System;
 using System.Collections.Generic;
@@ -13,13 +14,17 @@ namespace ECompanyHub.Infrastructure.Mapping
     {
         public MappingProfile()
         {
+            
             CreateMap<AccountRegisterDto, ApplicationUser>()
-                .ForMember(dest => dest.arabicName, opt => opt.MapFrom(src => src.arabicName))
-                .ForMember(dest => dest.englishName, opt => opt.MapFrom(src => src.englishName))
-                .ForMember(dest => dest.Email, opt => opt.MapFrom(src => src.email))
-                .ForMember(dest => dest.websiteUrl, opt => opt.MapFrom(src => src.websiteUrl))
-                .ForMember(dest => dest.PhoneNumber, opt => opt.MapFrom(src => src.phone));
-                //.ForMember(dest => dest.companyLogo, opt => opt.MapFrom(src => src.companyLogo));
+            .ForMember(dest => dest.arabicName, opt => opt.MapFrom(src => src.arabicName))
+            .ForMember(dest => dest.englishName, opt => opt.MapFrom(src => src.englishName))
+            .ForMember(dest => dest.Email, opt => opt.MapFrom(src => src.email))
+            .ForMember(dest => dest.websiteUrl, opt => opt.MapFrom(src => src.websiteUrl))
+            .ForMember(dest => dest.PhoneNumber, opt => opt.MapFrom(src => src.phone))
+            .ForMember(dest => dest.UserName, opt => opt.MapFrom(src => src.email))
+            .ForMember(dest => dest.companyLogo, opt => opt.Ignore());
+
+
 
 
         }

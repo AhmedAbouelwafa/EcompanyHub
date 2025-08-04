@@ -12,8 +12,9 @@ namespace ECompanyHub.Application.InterfaceService
 {
     public interface IAuthService
     {
-        public Task<ResponseHandler<LoginResponseDto>> RegisterAsync(AccountRegisterDto user);
+        public Task<ResponseHandler<LoginResponseDto>> RegisterAsync(AccountRegisterDto user, string? logoPath);
         public Task<ResponseHandler<LoginResponseDto>> LoginAsync(AccountLoginDto loginDto);
 
+        public Task<ResponseHandler<bool>> SetPasswordAsync(SetPasswordDto setPasswordDto);
     }
 }

@@ -4,6 +4,7 @@ using ECompanyHub.Application.DTOs.Account_DTOs;
 using ECompanyHub.Application.InterfaceService;
 using ECompanyHub.Application.Wrappers.Handlers;
 using ECompanyHub.Infrastructure.Identity;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -31,6 +32,7 @@ namespace ECompanyHub.API.Controllers
         [Consumes("multipart/form-data")]
         public async Task<IActionResult> Register([FromForm] AccountRegisterDto accountRegister)
         {
+            // ✅ Validations
             if (string.IsNullOrWhiteSpace(accountRegister.email))
                 return BadRequest("Email is required");
 
@@ -43,44 +45,27 @@ namespace ECompanyHub.API.Controllers
             if (string.IsNullOrWhiteSpace(accountRegister.arabicName))
                 return BadRequest("Arabic name is required");
 
-            if (!string.IsNullOrWhiteSpace(accountRegister.phone))
-            {
-                if (!accountRegister.phone.All(char.IsDigit) || accountRegister.phone.Length != 11)
-                    return BadRequest("Invalid phone number format. Must be 11 digits.");
-            }
+            if (!string.IsNullOrWhiteSpace(accountRegister.phone) && accountRegister.phone.Length < 11)
+                return BadRequest("Invalid phone number format. Must be 11 digits.");
 
-            // تحقق من صحة البريد الإلكتروني
             if (!new EmailAddressAttribute().IsValid(accountRegister.email))
                 return BadRequest("Invalid email format");
 
-            // تحقق من صحة URL
             if (!Uri.IsWellFormedUriString(accountRegister.websiteUrl, UriKind.Absolute))
                 return BadRequest("Invalid website URL format");
 
-            // تحقق من صحة الاسم الإنجليزي (مسموح به فقط الأحرف الإنجليزية)
             if (!System.Text.RegularExpressions.Regex.IsMatch(accountRegister.englishName, "^[a-zA-Z ]+$"))
                 return BadRequest("English name must contain only English letters");
 
-            // تحقق من صحة الاسم العربي (مسموح به فقط الأحرف العربية)
             if (!System.Text.RegularExpressions.Regex.IsMatch(accountRegister.arabicName, "^[\u0621-\u064A ]+$"))
                 return BadRequest("Arabic name must contain only Arabic letters");
 
-            var user = _mapper.Map<ApplicationUser>(accountRegister);
-            user.UserName = accountRegister.email;
-
-            var result = await _userManager.CreateAsync(user, "TemporaryPass@123");
-
-            if (!result.Succeeded)
-            {
-                var identityErrors = result.Errors.Select(e => e.Description).ToArray();
-                return BadRequest(ResponseHandler<string>.FailureResponse(identityErrors));
-            }
-
-            // ✅ رفع الصورة لو موجودة
+            // ✅ رفع الصورة إن وجدت
+            string? savedLogoPath = null;
             if (accountRegister.companyLogo != null && accountRegister.companyLogo.Length > 0)
             {
                 var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/images/logos");
-                Directory.CreateDirectory(uploadsFolder); // لو مش موجود
+                Directory.CreateDirectory(uploadsFolder);
 
                 var uniqueFileName = Guid.NewGuid().ToString() + Path.GetExtension(accountRegister.companyLogo.FileName);
                 var filePath = Path.Combine(uploadsFolder, uniqueFileName);
@@ -90,14 +75,25 @@ namespace ECompanyHub.API.Controllers
                     await accountRegister.companyLogo.CopyToAsync(stream);
                 }
 
-                user.companyLogo = $"images/logos/{uniqueFileName}";
-                await _userManager.UpdateAsync(user); // تخزين المسار في الداتابيز
+                savedLogoPath = $"images/logos/{uniqueFileName}";
             }
 
-            var resultt = await _authService.RegisterAsync(accountRegister);
-            return Ok(resultt);
+            // ✅ نمرر مسار الصورة يدويًا للـ DTO
+            var result = await _authService.RegisterAsync(accountRegister, savedLogoPath);
+            return Ok(result);
         }
 
+
+        [Authorize] // لازم يكون Authorized علشان نقدر نقرأ التوكن
+        [HttpPost("setpass")]
+        public async Task<IActionResult> SetPassword([FromBody] SetPasswordDto dto)
+        {
+            var result = await _authService.SetPasswordAsync(dto);
+            if (result.Success)
+                return Ok(result);
+
+            return BadRequest(result);
+        }
 
         [HttpPost("Login")]
         public async Task<IActionResult> Login(AccountLoginDto accountLogin)

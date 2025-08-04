@@ -27,6 +27,7 @@ namespace ECompanyHub.Infrastructure.InfraConfiguration
 
             });
             services.AddScoped<IAuthService, IdentityAuthService>();
+            services.AddHttpContextAccessor(); // عشان نستخدم ال HttpContext في ال IdentityAuthService
 
             //services.AddScoped<IMenuItemRepository, MenuItemRepository>();
             //services.AddScoped<ICategoryRepository, CategoryRepository>();
@@ -77,6 +78,7 @@ namespace ECompanyHub.Infrastructure.InfraConfiguration
 
 
             services.AddScoped<IEmailService, EmailService>();
+           
 
             return services;
         }
